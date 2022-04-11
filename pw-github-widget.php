@@ -20,8 +20,25 @@ if (!function_exists('github_shortcode')) {
    function github_shortcode($attributes)
    {
       include "connect.php";
-      $github_user = json_decode($data);
-      
+      $api_data = json_decode($data);
+
+      $filtered_data = array_filter($api_data, function ($event) {
+         return $event->type === "PushEvent";
+      });
+      $filtered_data = array_values($filtered_data);
+
+      $last_event = $filtered_data[0];
+
+      $repo_name = $last_event->repo->name; // lidiaCirrone/beijeAcademy
+      $repo_name = (strpos($repo_name, $username) !== false) ? str_replace("${username}/", "", $repo_name) : $repo_name;
+      // date_default_timezone_set("Europe/Rome");
+      $created_at = date("d/m/Y H:i:s", strtotime($last_event->created_at)); // 2022-04-11T16:23:53Z
+      $commit_msg = $last_event->payload->commits[0]->message; //ralTool project, style: toast notification for results and errors
+
+      // var_dump($repo_name);
+      // var_dump($created_at);
+      // var_dump($commit_msg);
+
       // var_dump($data);
       /* {
          "id": "21226830416",
@@ -65,7 +82,11 @@ if (!function_exists('github_shortcode')) {
 
       ob_start();
 ?>
-      bla bla bla duo
+
+      <p>Repository: <?php echo $repo_name; ?></p>
+      <p>Date: <?php echo $created_at; ?></p>
+      <p>Commit msg: <?php echo $commit_msg; ?></p>
+
 <?php
       return ob_get_clean();
    }
